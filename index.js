@@ -5,7 +5,6 @@ var _ = require('lodash');
 var path = require('path');
 var PluginError = gutil.PluginError;
 var fs = require('fs');
-var defs = {};
 
 const PLUGIN_NAME = 'gulp-dot-precompiler';
 
@@ -22,10 +21,10 @@ function getTemplateName(root, name, extension, separator) {
   return parts.join(separator);
 }
 
-function getTemplateCode(content,templateSettings,defs) {
+function getTemplateCode(content,templateSettings) {
   var compiled;
   try {
-    compiled = dot.template(content,templateSettings,defs).toString();
+    compiled = dot.template(content,templateSettings,{}).toString();
   } catch(err){
     console.log(err);
     return err;
@@ -77,16 +76,11 @@ function gulpDotify(options) {
         throw new PluginError(PLUGIN_NAME, error);
       }
 
-      defs.loadfile = function(include_path) {
-        current_path = (file.path).substr(0, (file.path).lastIndexOf('/')+1 );
-        return fs.readFileSync(current_path + include_path);
-      };
-
       var relative_path = file.relative;
       var trimmed_ext = relative_path.substr(0, relative_path.lastIndexOf('.')) || relative_path;
 
       var name = getTemplateName(options.root, trimmed_ext, options.extension, options.separator);
-      var code = getTemplateCode(contents,options.templateSettings,defs);
+      var code = getTemplateCode(contents,options.templateSettings);
       if(typeof code !== "string")
       {
         this.emit('error', new PluginError(PLUGIN_NAME, code));
